@@ -619,12 +619,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       shape: const StadiumBorder(),
                       shadowColor: Colors.black,
                     ),
-                    onPressed: _submitPasswordClicked,
+                    onPressed: (_oldPasswordController.text.isNotEmpty ||
+                        _newPasswordController.text.isNotEmpty ||
+                        _confirmPasswordController.text.isNotEmpty) ? _submitPasswordClicked : (){},
                   ),
                    Visibility(
                     visible: _isSubmitPwdClicked,
                     child: _validPassword ? const Text(
-                      'You password has been reset successfully!',
+                      'Your password has been reset successfully!',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           fontWeight: FontWeight.bold,

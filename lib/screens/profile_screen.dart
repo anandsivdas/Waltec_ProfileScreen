@@ -9,7 +9,23 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+
   final _passwordForm = GlobalKey<FormState>();
+  var _validPassword = false;
+  var _isSubmitPwdClicked = false;
+
+  final _oldPasswordController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
+
+  @override
+  void dispose() {
+    _oldPasswordController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   var dummyCardDetails = [
     {
@@ -451,6 +467,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _submitPasswordClicked() {
+    final isValid = _passwordForm.currentState?.validate();
+    if (!isValid!) {
+      setState(() {
+        _isSubmitPwdClicked = true;
+        _validPassword = false;
+      });
+      return;
+    }
+    else{
+      setState(() {
+        _isSubmitPwdClicked = true;
+        _validPassword = true;
+        _oldPasswordController.clear();
+        _newPasswordController.clear();
+        _confirmPasswordController.clear();
+      });
+    }
+  }
+
   Widget _passwordSection() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -509,19 +545,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 children: <Widget>[
                   TextFormField(
+                    controller: _oldPasswordController,
                     decoration: const InputDecoration(
+                      errorMaxLines: 2,
                         hintText: 'old password',
                         hintStyle: TextStyle(color: Colors.black54)),
+                    obscureText: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty){
+                        return 'Please enter a password';
+                      }
+                      if (value.length <6 || value.length > 20){
+                        return 'Password length should be between 6-20 characters';
+                      }
+                      else{
+                        return null;
+                      }
+                    },
                   ),
                   TextFormField(
+                    controller: _newPasswordController,
                     decoration: const InputDecoration(
+                        errorMaxLines: 2,
                         hintText: 'new password',
                         hintStyle: TextStyle(color: Colors.black54)),
+                    obscureText: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty){
+                        return 'Please enter a password';
+                      }
+                      if (value.length <6 || value.length > 20){
+                        return 'Password length should be between 6-20 characters';
+                      }
+                      else{
+                        return null;
+                      }
+                    },
                   ),
                   TextFormField(
+                    controller: _confirmPasswordController,
                     decoration: const InputDecoration(
+                        errorMaxLines: 2,
                         hintText: 'confirm password',
                         hintStyle: TextStyle(color: Colors.black54)),
+                    obscureText: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty){
+                        return 'Please enter a password';
+                      }
+                      if (value.length <6 || value.length > 20){
+                        return 'Password length should be between 6-20 characters';
+                      }
+                      if (value != _newPasswordController.text){
+                        return 'Confirm password doesn\'t match with New password. Try again!';
+                      }
+                      else{
+                        return null;
+                      }
+                    },
                   ),
                   const SizedBox(
                     height: 5,
@@ -538,8 +619,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       shape: const StadiumBorder(),
                       shadowColor: Colors.black,
                     ),
-                    onPressed: () {},
-                  )
+                    onPressed: _submitPasswordClicked,
+                  ),
+                   Visibility(
+                    visible: _isSubmitPwdClicked,
+                    child: _validPassword ? const Text(
+                      'You password has been reset successfully!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                          fontSize: 16),
+                    ) : const Text(
+                      'Password reset failed. Please try again!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red,
+                          fontSize: 16),
+                    ),
+                  ),
                 ],
               ),
             ),

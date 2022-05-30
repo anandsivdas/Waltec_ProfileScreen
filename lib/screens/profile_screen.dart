@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:dotted_line/dotted_line.dart';
+import 'package:flutter/services.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -9,15 +11,14 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-
   final _passwordForm = GlobalKey<FormState>();
+  final _secondaryEmailKey = GlobalKey<FormState>();
   var _validPassword = false;
   var _isSubmitPwdClicked = false;
 
   final _oldPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-
 
   @override
   void dispose() {
@@ -51,6 +52,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     //   'type': 'MASTER',
     //   'isSelected': true
     // }
+  ];
+
+  var dummyDeviceId = [
+    '8088424357382442',
+    '6349248484343534',
+    '8088424357382442',
+    '6349248484343534'
+  ];
+
+  var dummyBillingHistory = [
+    {
+      'date': '12/01/2022',
+      'amount': '\$5.99',
+      'invoice': 'WT-US000001',
+    },
+    {
+      'date': '01/01/2023',
+      'amount': '\$11.98',
+      'invoice': 'WT-US000001',
+    },
   ];
 
   Widget _buildBody(BuildContext context) {
@@ -475,8 +496,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _validPassword = false;
       });
       return;
-    }
-    else{
+    } else {
       setState(() {
         _isSubmitPwdClicked = true;
         _validPassword = true;
@@ -547,18 +567,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   TextFormField(
                     controller: _oldPasswordController,
                     decoration: const InputDecoration(
-                      errorMaxLines: 2,
+                        errorMaxLines: 2,
                         hintText: 'old password',
                         hintStyle: TextStyle(color: Colors.black54)),
                     obscureText: true,
                     validator: (value) {
-                      if (value == null || value.isEmpty){
+                      if (value == null || value.isEmpty) {
                         return 'Please enter a password';
                       }
-                      if (value.length <6 || value.length > 20){
+                      if (value.length < 6 || value.length > 20) {
                         return 'Password length should be between 6-20 characters';
-                      }
-                      else{
+                      } else {
                         return null;
                       }
                     },
@@ -571,13 +590,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         hintStyle: TextStyle(color: Colors.black54)),
                     obscureText: true,
                     validator: (value) {
-                      if (value == null || value.isEmpty){
+                      if (value == null || value.isEmpty) {
                         return 'Please enter a password';
                       }
-                      if (value.length <6 || value.length > 20){
+                      if (value.length < 6 || value.length > 20) {
                         return 'Password length should be between 6-20 characters';
-                      }
-                      else{
+                      } else {
                         return null;
                       }
                     },
@@ -590,16 +608,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         hintStyle: TextStyle(color: Colors.black54)),
                     obscureText: true,
                     validator: (value) {
-                      if (value == null || value.isEmpty){
+                      if (value == null || value.isEmpty) {
                         return 'Please enter a password';
                       }
-                      if (value.length <6 || value.length > 20){
+                      if (value.length < 6 || value.length > 20) {
                         return 'Password length should be between 6-20 characters';
                       }
-                      if (value != _newPasswordController.text){
+                      if (value != _newPasswordController.text) {
                         return 'Confirm password doesn\'t match with New password. Try again!';
-                      }
-                      else{
+                      } else {
                         return null;
                       }
                     },
@@ -620,26 +637,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       shadowColor: Colors.black,
                     ),
                     onPressed: (_oldPasswordController.text.isNotEmpty ||
-                        _newPasswordController.text.isNotEmpty ||
-                        _confirmPasswordController.text.isNotEmpty) ? _submitPasswordClicked : (){},
+                            _newPasswordController.text.isNotEmpty ||
+                            _confirmPasswordController.text.isNotEmpty)
+                        ? _submitPasswordClicked
+                        : () {},
                   ),
-                   Visibility(
+                  Visibility(
                     visible: _isSubmitPwdClicked,
-                    child: _validPassword ? const Text(
-                      'Your password has been reset successfully!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                          fontSize: 16),
-                    ) : const Text(
-                      'Password reset failed. Please try again!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red,
-                          fontSize: 16),
-                    ),
+                    child: _validPassword
+                        ? const Text(
+                            'Your password has been reset successfully!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                                fontSize: 16),
+                          )
+                        : const Text(
+                            'Password reset failed. Please try again!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red,
+                                fontSize: 16),
+                          ),
                   ),
                 ],
               ),
@@ -668,7 +689,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   decorationThickness: 1.5),
             ),
             onPressed: () {
-              //          add secondary email button click
+              showDialog(
+                  context: context,
+                  builder: (context) => _secondaryEmailDialog());
             },
           ),
           TextButton(
@@ -682,8 +705,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   decorationThickness: 1.5),
             ),
             onPressed: () {
-              //          billing history button click
-            },
+              showDialog(
+                  context: context,
+                  builder: (context) => _billingHistory());            },
           ),
           TextButton(
             child: const Text(
@@ -696,10 +720,274 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   decorationThickness: 1.5),
             ),
             onPressed: () {
-              //          manage internet history button click
+              showDialog(
+                  context: context,
+                  builder: (context) => _manageInternetConnectivity());
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _secondaryEmailDialog() {
+    return Dialog(
+      backgroundColor: const Color.fromRGBO(95, 89, 89, 1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Container(
+        // height: 500,
+        child: ListView(
+          shrinkWrap: true,
+          children: <Widget>[
+            const SizedBox(
+              height: 30,
+            ),
+            const Center(
+              child: Text(
+                'Add Secondary Email',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 18,
+                    decoration: TextDecoration.underline,
+                    decorationThickness: 1.5),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Form(
+                key: _secondaryEmailKey,
+                child: Column(
+                  children: <Widget>[
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      decoration: InputDecoration(
+                          hintText: 'Add Secondary Email',
+                          fillColor: Colors.white,
+                          filled: true,
+                          isDense: true,
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20))),
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      decoration: InputDecoration(
+                          hintText: 'Add Secondary Email',
+                          fillColor: Colors.white,
+                          filled: true,
+                          isDense: true,
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20))),
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      decoration: InputDecoration(
+                          hintText: 'Add Secondary Email',
+                          fillColor: Colors.white,
+                          filled: true,
+                          isDense: true,
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20))),
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      decoration: InputDecoration(
+                          hintText: 'Add Secondary Email',
+                          fillColor: Colors.white,
+                          filled: true,
+                          isDense: true,
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20))),
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      decoration: InputDecoration(
+                          hintText: 'Add Secondary Email',
+                          fillColor: Colors.white,
+                          filled: true,
+                          isDense: true,
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20))),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          child: Text(
+                            'Submit',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
+                          )),
+                      style: ElevatedButton.styleFrom(
+                        shape: const StadiumBorder(),
+                        shadowColor: Colors.black,
+                      ),
+                      onPressed: () {},
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _manageInternetConnectivity() {
+    return Dialog(
+      backgroundColor: const Color.fromRGBO(95, 89, 89, 1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+        child: Container(
+          child: ListView(
+            shrinkWrap: true,
+            children: <Widget>[
+              const Center(
+                child: Text(
+                  'Cellular Connectivity',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 18,
+                      decoration: TextDecoration.underline,
+                      decorationThickness: 1.5),
+                ),
+              ),
+              const SizedBox(height: 15),
+              const Text(
+                'Device Id',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18),
+              ),
+              ListView.builder(
+                shrinkWrap: true,
+                itemCount: dummyDeviceId.length,
+                itemBuilder: (ctx, index) => Column(
+                  children: <Widget>[
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Text(
+                          dummyDeviceId[index],
+                          style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        CupertinoSwitch(value: true, onChanged: (_) {}),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Center(
+                child: ElevatedButton(
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    child: Text(
+                      'Submit',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    shape: const StadiumBorder(),
+                    shadowColor: Colors.black,
+                  ),
+                  onPressed: () {
+                    //          cellular connectivity submit button click
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _billingHistory() {
+    return Dialog(
+      backgroundColor: const Color.fromRGBO(95, 89, 89, 1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+        child: Container(
+          // height: 400,
+          child: ListView(
+            shrinkWrap: true,
+            children: <Widget>[
+              const Center(
+                child: Text(
+                  'Billing History',
+                  style:  TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      color: Colors.white,
+                      decoration: TextDecoration.underline,
+                      decorationThickness: 1.5),
+                ),
+              ),
+              const SizedBox(height: 20,),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: const <Widget>[
+                 Text(
+                  'Date',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18),
+                ),
+                Text(
+                  '\$Amount',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18),
+                ),
+                Text(
+                  'Invoice#',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18),
+                ),
+              ],
+              ),
+              const SizedBox(height: 20,),
+              ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: dummyBillingHistory.length,
+                  itemBuilder: (ctx, index) => Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                    Text(dummyBillingHistory[index]['date'] as String,
+                      style: const TextStyle(fontWeight: FontWeight.bold,
+                      color: Colors.white, fontSize: 15),),
+                    Text(dummyBillingHistory[index]['amount'] as String,
+                        style: const TextStyle(fontWeight: FontWeight.bold,
+                        color: Colors.white, fontSize: 15),),
+                    Text(dummyBillingHistory[index]['invoice'] as String,
+                      style: const TextStyle(fontWeight: FontWeight.bold,
+                          color: Colors.white, fontSize: 15, decoration: TextDecoration.underline),),
+                  ],
+                  ) )
+            ],
+          ),
+        ),
       ),
     );
   }

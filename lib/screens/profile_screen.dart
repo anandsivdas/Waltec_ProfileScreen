@@ -1,7 +1,9 @@
+import 'package:email_validator/email_validator.dart';
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:dotted_line/dotted_line.dart';
-import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -11,8 +13,11 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  final ImagePicker _picker = ImagePicker();
+  File? selectedImage;
+
   final _passwordForm = GlobalKey<FormState>();
-  final _secondaryEmailKey = GlobalKey<FormState>();
+  final _secondaryEmailForm = GlobalKey<FormState>();
   var _validPassword = false;
   var _isSubmitPwdClicked = false;
 
@@ -41,17 +46,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'type': 'MASTER',
       'isSelected': false
     },
-    // {
-    //   'cardNo': '**** **** **** 7765',
-    //   'expDate': '09/2028',
-    //   'type': 'MASTER',
-    //   'isSelected': false
-    // },    {
-    //   'cardNo': '**** **** **** 7765',
-    //   'expDate': '09/2028',
-    //   'type': 'MASTER',
-    //   'isSelected': true
-    // }
   ];
 
   var dummyDeviceId = [
@@ -74,12 +68,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
     },
   ];
 
+  /// Functions Region
+
+  Future<void> chooseImage(imgSource) async {
+    XFile? image;
+    image = await _picker.pickImage(source: imgSource,);
+    if (image != null) {
+      setState(() {
+        selectedImage = File(image!.path);
+      });
+      Navigator.of(context).pop();
+    }
+  }
+
+  void _submitPasswordClicked() {
+    final isValid = _passwordForm.currentState?.validate();
+    if (!isValid!) {
+      setState(() {
+        _isSubmitPwdClicked = true;
+        _validPassword = false;
+      });
+      return;
+    } else {
+      setState(() {
+        _isSubmitPwdClicked = true;
+        _validPassword = true;
+        _oldPasswordController.clear();
+        _newPasswordController.clear();
+        _confirmPasswordController.clear();
+      });
+    }
+  }
+
+  void _submitSecondaryEmailClicked() {
+    final isValid = _secondaryEmailForm.currentState?.validate();
+  }
+
+  /// Widgets Region
+
   Widget _buildBody(BuildContext context) {
     return SafeArea(
       child: SingleChildScrollView(
         child: Container(
           width: MediaQuery.of(context).size.width,
-          // height: MediaQuery.of(context).size.height,
           child: Column(
             children: <Widget>[
               Container(
@@ -112,21 +143,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 height: 20,
               ),
               Container(
-                // color: Colors.green,
                 padding: const EdgeInsets.only(
                     left: 5, right: 5, top: 10, bottom: 10),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
+                    const SizedBox(
+                      width: 5,
+                    ),
                     Container(
-                      // color: Colors.red,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(110.0),
-                        child: Image.asset(
-                          'images/profile_image.jpg',
-                          fit: BoxFit.cover,
-                          height: 110,
-                          width: 110,
+                      child: InkWell(
+                        onTap: () {
+                              showDialog(
+                                  context: context,
+                                  builder: (context) => _profilePickerPopup());
+                            },
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(110.0),
+                          child: selectedImage != null ? Image.file(selectedImage!,
+                            fit: BoxFit.cover,
+                            height: 100,
+                            width: 100,) :
+                          Image.asset('images/default_profileImage.jpg',
+                            fit: BoxFit.cover,
+                            height: 100,
+                            width: 100,)
                         ),
                       ),
                     ),
@@ -220,6 +261,95 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ClipRRect(
                 borderRadius: const BorderRadius.all(Radius.circular(30.0)),
                 child: _myInfoArea(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _profilePickerPopup() {
+    return Dialog(
+      backgroundColor: const Color.fromRGBO(95, 89, 89, 1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Container(
+        // height: 500,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+          child: ListView(
+            shrinkWrap: true,
+            children: <Widget>[
+              const Center(
+                child: Text(
+                  'Add Profile Picture',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 18,
+                      decoration: TextDecoration.underline,
+                      decorationThickness: 1.5),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Card(
+                elevation: 8,
+                child: GestureDetector(
+                  onTap: () {
+                    chooseImage(ImageSource.gallery);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(
+                          Icons.photo_size_select_actual_outlined,
+                          size: 40,
+                          color: Color.fromRGBO(95, 89, 89, 1),
+                        ),
+                        Text(
+                          ' Gallery',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color.fromRGBO(95, 89, 89, 1)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Card(
+                elevation: 8,
+                child: GestureDetector(
+                  onTap: () {
+                    chooseImage(ImageSource.camera);
+                    },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(
+                          Icons.camera,
+                          size: 40,
+                          color: Color.fromRGBO(95, 89, 89, 1),
+                        ),
+                        Text(
+                          ' Camera',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color.fromRGBO(95, 89, 89, 1)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -488,25 +618,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _submitPasswordClicked() {
-    final isValid = _passwordForm.currentState?.validate();
-    if (!isValid!) {
-      setState(() {
-        _isSubmitPwdClicked = true;
-        _validPassword = false;
-      });
-      return;
-    } else {
-      setState(() {
-        _isSubmitPwdClicked = true;
-        _validPassword = true;
-        _oldPasswordController.clear();
-        _newPasswordController.clear();
-        _confirmPasswordController.clear();
-      });
-    }
-  }
-
   Widget _passwordSection() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -706,8 +817,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             onPressed: () {
               showDialog(
-                  context: context,
-                  builder: (context) => _billingHistory());            },
+                  context: context, builder: (context) => _billingHistory());
+            },
           ),
           TextButton(
             child: const Text(
@@ -758,7 +869,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Form(
-                key: _secondaryEmailKey,
+                key: _secondaryEmailForm,
                 child: Column(
                   children: <Widget>[
                     const SizedBox(height: 10),
@@ -770,6 +881,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           isDense: true,
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(20))),
+                      validator: (value) {
+                        if (value != null && !EmailValidator.validate(value)) {
+                          return 'Please enter a valid email';
+                        } else {
+                          return null;
+                        }
+                      },
                     ),
                     const SizedBox(height: 10),
                     TextFormField(
@@ -780,6 +898,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           isDense: true,
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(20))),
+                      validator: (value) {
+                        if (value != null && !EmailValidator.validate(value)) {
+                          return 'Please enter a valid email';
+                        } else {
+                          return null;
+                        }
+                      },
                     ),
                     const SizedBox(height: 10),
                     TextFormField(
@@ -790,6 +915,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           isDense: true,
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(20))),
+                      validator: (value) {
+                        if (value != null && !EmailValidator.validate(value)) {
+                          return 'Please enter a valid email';
+                        } else {
+                          return null;
+                        }
+                      },
                     ),
                     const SizedBox(height: 10),
                     TextFormField(
@@ -800,6 +932,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           isDense: true,
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(20))),
+                      validator: (value) {
+                        if (value != null && !EmailValidator.validate(value)) {
+                          return 'Please enter a valid email';
+                        } else {
+                          return null;
+                        }
+                      },
                     ),
                     const SizedBox(height: 10),
                     TextFormField(
@@ -810,6 +949,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           isDense: true,
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(20))),
+                      validator: (value) {
+                        if (value != null && !EmailValidator.validate(value)) {
+                          return 'Please enter a valid email';
+                        } else {
+                          return null;
+                        }
+                      },
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton(
@@ -824,7 +970,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         shape: const StadiumBorder(),
                         shadowColor: Colors.black,
                       ),
-                      onPressed: () {},
+                      onPressed: _submitSecondaryEmailClicked,
                     ),
                     const SizedBox(height: 20),
                   ],
@@ -932,7 +1078,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const Center(
                 child: Text(
                   'Billing History',
-                  style:  TextStyle(
+                  style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 20,
                       color: Colors.white,
@@ -940,51 +1086,83 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       decorationThickness: 1.5),
                 ),
               ),
-              const SizedBox(height: 20,),
+              const SizedBox(
+                height: 20,
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: const <Widget>[
-                 Text(
-                  'Date',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18),
-                ),
-                Text(
-                  '\$Amount',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18),
-                ),
-                Text(
-                  'Invoice#',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18),
-                ),
-              ],
+                  Text(
+                    'Date',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18),
+                  ),
+                  Text(
+                    '\$Amount',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18),
+                  ),
+                  Text(
+                    'Invoice#',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18),
+                  ),
+                ],
               ),
-              const SizedBox(height: 20,),
+              const SizedBox(
+                height: 20,
+              ),
               ListView.builder(
                   shrinkWrap: true,
                   itemCount: dummyBillingHistory.length,
                   itemBuilder: (ctx, index) => Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                    Text(dummyBillingHistory[index]['date'] as String,
-                      style: const TextStyle(fontWeight: FontWeight.bold,
-                      color: Colors.white, fontSize: 15),),
-                    Text(dummyBillingHistory[index]['amount'] as String,
-                        style: const TextStyle(fontWeight: FontWeight.bold,
-                        color: Colors.white, fontSize: 15),),
-                    Text(dummyBillingHistory[index]['invoice'] as String,
-                      style: const TextStyle(fontWeight: FontWeight.bold,
-                          color: Colors.white, fontSize: 15, decoration: TextDecoration.underline),),
-                  ],
-                  ) )
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Text(
+                            dummyBillingHistory[index]['date'] as String,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontSize: 15),
+                          ),
+                          Text(
+                            dummyBillingHistory[index]['amount'] as String,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontSize: 15),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              //            invoice pdf download button click
+                            },
+                            child: Row(
+                              children: <Widget>[
+                                Text(
+                                  dummyBillingHistory[index]['invoice']
+                                      as String,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                      decoration: TextDecoration.underline),
+                                ),
+                                Image.asset(
+                                  'images/invoicePdf.png',
+                                  height: 20,
+                                  width: 20,
+                                )
+                              ],
+                            ),
+                          ),
+                        ],
+                      ))
             ],
           ),
         ),
